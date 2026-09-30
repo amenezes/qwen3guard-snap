@@ -1,0 +1,34 @@
+#!/bin/bash -eu
+
+port="$(modelctl get http.port)"
+host="$(modelctl get http.host)"
+sleep_idle_seconds="$(modelctl get sleep-idle-seconds)"
+min_context_size="$(modelctl get min-context-size)"
+model_name=$("$SNAP_NAME" model --format=json | jq -r '.name')
+
+extra_args=()
+
+verbose="$(modelctl get verbose)"
+if [ "${verbose}" = "true" ]; then
+  extra_args+=(--verbose)
+fi
+
+set -x
+# --jinja: Qwen3Guard uses the Qwen3 chat template embedded in the GGUF.
+#   The --jinja flag ensures llama.cpp applies it correctly.
+# No --min-p override: unlike MiniCPM5, Qwen3Guard does not require a specific
+#   min_p setting; the llama.cpp default works well for guardrail classification.
+# No --reasoning-preserve: Qwen3Guard is not a thinking model.
+# No --threads on purpose: llama.cpp defaults to the number of physical cores,
+#   which is typically faster than --threads $(nproc) on SMT machines.
+exec llama-server \
+  --model "$MODEL_FILE" \
+  --alias "$model_name" \
+  --port "$port" \
+  --host "$host" \
+  --no-warmup \
+  --sleep-idle-seconds "$sleep_idle_seconds" \
+  --fit-ctx "$min_context_size" \
+  --jinja \
+  "${extra_args[@]}" \
+  "$@"

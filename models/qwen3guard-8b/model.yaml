@@ -1,0 +1,17 @@
+name: qwen3guard-8b
+description: Qwen3Guard-Gen-8B, a high-accuracy safety guardrail model for content moderation (Q4_K_M quantization)
+model-card-url: https://huggingface.co/Qwen/Qwen3Guard-Gen-8B
+format: GGUF
+quantization: Q4_K_M
+
+disk-size: 5100M
+
+capabilities:
+  - text
+
+components:
+  - model-q4-k-m-8b-gguf
+
+environment:
+  # Single-file GGUF (no sharding), so no layout/symlinks are needed.
+  - MODEL_FILE=$SNAP_COMPONENTS/model-q4-k-m-8b-gguf/Qwen3Guard-Gen-8B.Q4_K_M.gguf

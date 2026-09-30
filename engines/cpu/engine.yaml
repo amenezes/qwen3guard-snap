@@ -1,0 +1,28 @@
+name: cpu
+summary: Optimized for various CPUs
+description: |
+  This engine uses llama.cpp.
+
+  It is optimized for both amd64 and arm64 CPU architectures, for a wide range
+  of architecture variants.
+vendor: amenezes.net
+
+devices:
+  anyof:
+    - type: cpu
+      architecture: amd64
+    - type: cpu
+      architecture: arm64
+
+runtime: llamacpp
+
+model:
+  default: qwen3guard-0.6b
+  options:
+    - qwen3guard-0.6b
+    - qwen3guard-4b
+    - qwen3guard-8b
+
+configurations:
+  sleep-idle-seconds: 600
+  min-context-size: 4096

@@ -1,0 +1,20 @@
+# Default variant (0.6B Q4_K_M). The name carries no quantization suffix: it is
+# what the OpenAI API serves as the model id (see engines/*/server, --alias).
+# Additional variants: qwen3guard-4b, qwen3guard-8b.
+name: qwen3guard-0.6b
+description: Qwen3Guard-Gen-0.6B, a lightweight safety guardrail model for real-time content moderation
+model-card-url: https://huggingface.co/Qwen/Qwen3Guard-Gen-0.6B
+format: GGUF
+quantization: Q4_K_M
+
+disk-size: 470M
+
+capabilities:
+  - text
+
+components:
+  - model-q4-k-m-0-6b-gguf
+
+environment:
+  # Single-file GGUF (no sharding), so no layout/symlinks are needed.
+  - MODEL_FILE=$SNAP_COMPONENTS/model-q4-k-m-0-6b-gguf/Qwen3Guard-Gen-0.6B.Q4_K_M.gguf
