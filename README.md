@@ -148,6 +148,16 @@ curl -s http://127.0.0.1:8364/v1/chat/completions -H 'Content-Type: application/
   sudo snap connect qwen3guard:hardware-observe
   sudo qwen3guard use-engine --auto
   ```
+* **AMD engine needs `process-control`:** the ROCm runtime pins its worker threads with
+  `sched_setaffinity`, and snapd's default seccomp policy only allows that call for pid 0.
+  Without the plug, HSA fails to initialise, llama.cpp reports `no ROCm-capable device is
+  detected` and runs on the CPU while the engine still shows `amd-gpu`. The interface is not
+  auto-connected, so connect it once after install -- and request its auto-connection before
+  publishing to the store:
+  ```shell
+  sudo snap connect qwen3guard:process-control
+  sudo snap restart qwen3guard.server
+  ```
 * **Provider:** the snap exports an `inference-provider` content slot, so another snap can consume
   this endpoint instead of running its own model.
 * **Local API:** the endpoint has no authentication and allows cross-origin requests, which the
