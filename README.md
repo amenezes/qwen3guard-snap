@@ -22,6 +22,7 @@ The snap includes the following hardware-optimized inference engines:
 
 * cpu: Optimized for x64 and ARM (armv8, armv9) CPUs
 * nvidia-gpu: CUDA-enabled GPU acceleration
+* amd-gpu: ROCm-enabled GPU acceleration for AMD GPUs
 
 The most suitable engine is automatically selected based on the available hardware.
 
@@ -37,6 +38,8 @@ qwen3guard
 
 > [!TIP]
 > Some accelerators require extra [drivers](https://documentation.ubuntu.com/inference-snaps/how-to/setup/drivers/) to be usable with this snap.
+> The `amd-gpu` engine uses the in-kernel `amdgpu` driver (KFD); the ROCm
+> user-space libraries are bundled in the snap, so no host ROCm install is needed.
 
 ## Model variants
 
@@ -66,8 +69,8 @@ and the pinned llama.cpp runtime on the cpu engine:
 | 8B | 4 096 | ~6 GB |
 
 Disk usage is ~0.7 GB once installed (snap, llama.cpp component and model weights) for the 0.6B
-variant, plus ~1.1 GB if the nvidia-gpu engine is selected. Larger variants add ~2.2 GB (4B) or
-~4.6 GB (8B).
+variant, plus ~1.1 GB if the nvidia-gpu engine is selected, or ~3.8 GB if the amd-gpu engine is
+selected. Larger variants add ~2.2 GB (4B) or ~4.6 GB (8B).
 
 The context size is not fixed: llama.cpp's `--fit` feature sizes it to the memory
 available, using `--fit-ctx` (default 4096) as the floor.
@@ -132,10 +135,13 @@ curl -s http://127.0.0.1:8364/v1/chat/completions -H 'Content-Type: application/
 * **Sampling:** the engine uses llama.cpp defaults for sampling parameters. Unlike MiniCPM5,
   Qwen3Guard does not require `--min-p 0.0`.
 * **Model license:** Apache-2.0 (Alibaba Cloud / Qwen Team). The packaging code is GPL-3.0.
-* **Engine selection:** the `nvidia-gpu` engine is picked whenever an NVIDIA GPU is
-  present on the PCI bus, even if the driver is not usable. CUDA then fails to
-  initialise and llama.cpp falls back to the CPU backend; run
-  `sudo qwen3guard use-engine cpu` to switch back and free the ~1.1 GB component. Selection runs
+* **Engine selection:** the `nvidia-gpu` and `amd-gpu` engines are picked whenever a GPU
+  from the matching vendor is present on the PCI bus, even if the driver is not usable.
+  The backend then fails to initialise and llama.cpp falls back to the CPU backend; run
+  `sudo qwen3guard use-engine cpu` to switch back and free the engine component
+  (~1.1 GB NVIDIA, ~3.8 GB AMD). The AMD engine only matches the microarchitectures
+  supported by the bundled ROCm build (gfx1010-gfx1201, including the RX 9070 XT);
+  older AMD GPUs select the cpu engine. Selection runs
   at install time and needs the `hardware-observe` interface; if its auto-connection has not been
   granted, connect it and re-run the selection manually:
   ```shell

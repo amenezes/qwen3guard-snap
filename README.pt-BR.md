@@ -24,6 +24,7 @@ O snap inclui os seguintes motores de inferência otimizados por hardware:
 
 * cpu: otimizado para CPUs x64 e ARM (armv8, armv9)
 * nvidia-gpu: aceleração por GPU com CUDA
+* amd-gpu: aceleração por GPU com ROCm para GPUs AMD
 
 O motor mais adequado é selecionado automaticamente de acordo com o hardware disponível.
 
@@ -39,6 +40,8 @@ qwen3guard
 
 > [!TIP]
 > Alguns aceleradores exigem [drivers](https://documentation.ubuntu.com/inference-snaps/how-to/setup/drivers/) adicionais para funcionar com este snap.
+> O motor `amd-gpu` usa o driver `amdgpu` do kernel (KFD); as bibliotecas de user
+> space do ROCm vêm embarcadas no snap, então não é preciso instalar ROCm no host.
 
 ## Variantes do modelo
 
@@ -68,8 +71,8 @@ e o runtime llama.cpp da versão fixada, no motor cpu:
 | 8B | 4 096 | ~6 GB |
 
 O uso de disco é de ~0,7 GB após a instalação (snap, componente do llama.cpp e pesos) para a
-variante 0.6B, mais ~1,1 GB se o motor nvidia-gpu for selecionado. As variantes maiores
-acrescentam ~2,2 GB (4B) ou ~4,6 GB (8B).
+variante 0.6B, mais ~1,1 GB se o motor nvidia-gpu for selecionado, ou ~3,8 GB se o motor amd-gpu
+for selecionado. As variantes maiores acrescentam ~2,2 GB (4B) ou ~4,6 GB (8B).
 
 O tamanho do contexto não é fixo: o recurso `--fit` do llama.cpp o dimensiona conforme a
 memória disponível, usando `--fit-ctx` (padrão 4096) como piso.
@@ -135,10 +138,13 @@ curl -s http://127.0.0.1:8364/v1/chat/completions -H 'Content-Type: application/
 * **Amostragem:** o motor usa os padrões do llama.cpp para os parâmetros de amostragem. Ao
   contrário do MiniCPM5, o Qwen3Guard não requer `--min-p 0.0`.
 * **Licença do modelo:** Apache-2.0 (Alibaba Cloud / Qwen Team). O código de empacotamento é GPL-3.0.
-* **Seleção de motor:** o motor `nvidia-gpu` é escolhido sempre que existe uma GPU NVIDIA no
-  barramento PCI, mesmo que o driver não esteja utilizável. Nesse caso o CUDA falha ao
-  inicializar e o llama.cpp cai para o backend de CPU; rode
-  `sudo qwen3guard use-engine cpu` para voltar e liberar o componente de ~1,1 GB. A seleção roda
+* **Seleção de motor:** os motores `nvidia-gpu` e `amd-gpu` são escolhidos sempre que
+  existe uma GPU do fornecedor correspondente no barramento PCI, mesmo que o driver não
+  esteja utilizável. Nesse caso o backend falha ao inicializar e o llama.cpp cai para o
+  backend de CPU; rode `sudo qwen3guard use-engine cpu` para voltar e liberar o
+  componente do motor (~1,1 GB no NVIDIA, ~3,8 GB no AMD). O motor AMD só casa as
+  microarquiteturas suportadas pelo build ROCm embarcado (gfx1010–gfx1201, incluindo a
+  RX 9070 XT); GPUs AMD mais antigas selecionam o motor cpu. A seleção roda
   na instalação e precisa da interface `hardware-observe`; se a auto-conexão dela ainda não tiver
   sido concedida, conecte e rode a seleção manualmente:
   ```shell
