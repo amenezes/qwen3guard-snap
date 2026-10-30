@@ -168,7 +168,7 @@ curl -s http://127.0.0.1:8364/v1/chat/completions -H 'Content-Type: application/
 
 Clone the repo:
 ```shell
-git clone <this-repo>
+git clone https://github.com/amenezes/qwen3guard-snap
 ```
 
 Initialize the development environment:
@@ -192,34 +192,16 @@ make build
 make install
 ```
 
+`make install` installs the snap and every `.comp` in the directory, reconnects the interfaces
+and preserves the engine already selected. To change the engine on a fresh installation — or
+after `./dev/install.sh --clean`, which wipes the configuration — pass `--engine`:
+
+```shell
+./dev/install.sh --engine=amd-gpu
+```
+
 `make init` downloads the default 0.6B Q4_K_M GGUF and verifies its sha256. To
 download all model variants (0.6B, 4B, 8B), use `make init-all` instead.
 To use a local copy, place it at `components/model-q4-k-m-0-6b-gguf/Qwen3Guard-Gen-0.6B.Q4_K_M.gguf`
 (and similarly for the other variants) and run `make verify-model` (or
 `make verify-extra-models`).
-
-## Publishing to the Snap Store
-
-Two store-side requests are prerequisites, and both take time, so open them early:
-
-* **Component upload access** -- the weights and the llama.cpp runtime ship as
-  [components](https://snapcraft.io/docs/explanation/how-snaps-work/snap-components/), and
-  uploading components is limited to accounts on the store's allow-list. Request it on the
-  [Snapcraft forum](https://forum.snapcraft.io/c/store-requests/).
-* **Auto-connection of `hardware-observe`** -- the interface is not auto-connected by default, so
-  a store install cannot detect the hardware during `use-engine --auto` until the request is
-  granted (see the
-  [process](https://snapcraft.io/docs/reference/administration/process-for-aliases-auto-connections-and-tracks/)).
-
-The first upload also requires a registered name, and a repository that actually exists: the store
-listing links to `website`, `source-code`, `issues` and `contact` from `snap/snapcraft.yaml`.
-
-```shell
-snapcraft login
-snapcraft register qwen3guard
-make build
-./dev/upload.sh latest/edge   # snapcraft upload <snap> --component ... --release=latest/edge
-```
-
-`.github/workflows/cicd.yaml` publishes to `latest/edge` on every push to `main` once the
-`SNAPCRAFT_STORE_CREDENTIALS` secret (the output of `snapcraft export-login`) is configured.

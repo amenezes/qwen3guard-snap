@@ -159,7 +159,7 @@ curl -s http://127.0.0.1:8364/v1/chat/completions -H 'Content-Type: application/
 
 克隆仓库：
 ```shell
-git clone <this-repo>
+git clone https://github.com/amenezes/qwen3guard-snap
 ```
 
 初始化开发环境：
@@ -183,32 +183,14 @@ make build
 make install
 ```
 
+`make install` 安装 snap 和目录下所有 `.comp`，重新连接各接口，并保留已选定的引擎。若要在全新
+安装中更换引擎，或在执行 `./dev/install.sh --clean`（会清除配置）之后更换，请传入 `--engine`：
+
+```shell
+./dev/install.sh --engine=amd-gpu
+```
+
 `make init` 会下载默认的 0.6B Q4_K_M GGUF 并校验其 sha256。如需下载全部模型变体
 （0.6B、4B、8B），请使用 `make init-all`。如需改用本地副本，请将其放到
 `components/model-q4-k-m-0-6b-gguf/Qwen3Guard-Gen-0.6B.Q4_K_M.gguf`
 （其他变体同理），然后运行 `make verify-model`（或 `make verify-extra-models`）。
-
-## 发布到 Snap Store
-
-有两项商店侧申请是前置条件，且都需要时间，请尽早提交：
-
-* **组件上传权限** —— 权重与 llama.cpp 运行时以
-  [组件](https://snapcraft.io/docs/explanation/how-snaps-work/snap-components/)形式发布，而组件
-  上传仅限商店白名单内的账号。请在
-  [Snapcraft 论坛](https://forum.snapcraft.io/c/store-requests/)提交申请。
-* **`hardware-observe` 的自动连接** —— 该接口默认不会自动连接，因此在申请获批前，从商店安装的
-  snap 无法在 `use-engine --auto` 时检测硬件（参见
-  [流程](https://snapcraft.io/docs/reference/administration/process-for-aliases-auto-connections-and-tracks/)）。
-
-首次上传还需要注册名称，以及一个真实存在的仓库：商店页面会链接到 `snap/snapcraft.yaml` 中的
-`website`、`source-code`、`issues` 和 `contact`。
-
-```shell
-snapcraft login
-snapcraft register qwen3guard
-make build
-./dev/upload.sh latest/edge   # snapcraft upload <snap> --component ... --release=latest/edge
-```
-
-配置好 `SNAPCRAFT_STORE_CREDENTIALS` secret（`snapcraft export-login` 的输出）后，
-`.github/workflows/cicd.yaml` 会在每次推送到 `main` 时发布到 `latest/edge`。
